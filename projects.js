@@ -43,6 +43,53 @@ window.PORTFOLIO = {
     { title: "Partner Specials: Franchise", unit: "Franchise" }
   ],
 
+  // The Funnel page: the live Vendasta Partner Center automations, grouped by the job each does in the GTM motion.
+  funnel: {
+    title: "The Funnel",
+    lede: "How automation runs the Vendasta sales engine, lead to renewal. Every live Partner Center automation I built, grouped by the job it does in the go-to-market motion.",
+    stats: [
+      { v: "197", l: "automations built" },
+      { v: "79", l: "live today", hot: true },
+      { v: "5", l: "funnel stages covered" },
+      { v: "53", l: "live in the acquisition funnel" }
+    ],
+    stages: [
+      { name: "Lead capture and routing", n: 11, what: "Every new lead is created, enriched and given an owner, without manual entry.",
+        does: ["Webchat leads become CRM companies automatically", "Yext leads are created and pushed to reps round robin", "Re-ignited leads are re-routed, with error alerts"],
+        ai: ["Aurora webchat"], titles: ["lead-routing-engine", "lead-funnel"] },
+      { name: "Qualification and scoring", n: 9, what: "AI decides who the lead is and how much they're worth, then audits its own work.",
+        does: ["ICP classification and re-scores on every key change", "Lead Tier written from employee count", "SDR calls and ICP results graded"],
+        ai: ["ICP Employee (IvY)", "Hams-Tier", "Scorekeeper"], titles: ["auto-assign-decode", "ai-scorecards"] },
+      { name: "AI SDR outreach", n: 11, what: "The AI voice SDR calls and texts leads; humans pick up whoever it can't reach.",
+        does: ["Sandra places outbound calls and follow-up SMS", "Missed leads drop into Kixie powerlists for reps", "Overdue leads are called in or after office hours"],
+        ai: ["Sandra voice SDR"], titles: ["gtm-ai-org"] },
+      { name: "Discovery and demos", n: 9, what: "Booked demos are tracked, reminded and logged so no meeting slips.",
+        does: ["A demo record is created when a meeting is booked", "Status updates to Completed or No-show", "Reminder tasks and SMS before every meeting"],
+        ai: ["Meeting reminder tasks"], titles: ["calendar-bot"] },
+      { name: "Opportunity pipeline", n: 13, what: "Opportunities are opened, tagged and closed out consistently across pipelines.",
+        does: ["Sales Led and Marketing Led opportunity creation", "#pureoutbound tags added and removed by stage", "Dead leads closed out; Closed Won posted to Google Chat"],
+        ai: [], titles: ["sales-org-map"] }
+    ],
+    after: [
+      { name: "Retention", n: 5, what: "AI explains every loss so the team can act before the next one.",
+        does: ["Closed-lost deals analyzed by AI and posted to Google Chat", "Churn reason and prevention steps for cancellations", "Strategic business reviews (SBRs) logged"], ai: ["Churn analyst"] },
+      { name: "Expansion", n: 3, what: "Signals that a partner is ready for more reach the right people.",
+        does: ["Alert when an account goes from free to paid without a sales order", "New opportunities posted to the Partner Relations team"], ai: [] }
+    ],
+    foundation: [
+      { name: "Salesperson help", n: 7, d: "AI go-to-market plans, opportunity reassignment and account briefs." },
+      { name: "Hand SMBs to Broadly", n: 3, d: "Small-business leads and their meetings move to the Broadly team." },
+      { name: "Data hygiene", n: 4, d: "Duplicate detection and clean classification across the CRM." },
+      { name: "Finance ops", n: 2, d: "Credit and refund requests logged and approved." }
+    ],
+    takeaways: [
+      { t: "Built for acquisition", d: "53 of the live automations sit in the five funnel stages. Only 8 work after the sale." },
+      { t: "AI does the judgment work", d: "Scoring, tiering, voice outreach and loss analysis all run through AI employees, with graders checking the output." },
+      { t: "Post-sale is next", d: "Retention and expansion are the thinnest stages, which makes them the next place to automate." }
+    ],
+    source: "Source: Vendasta Partner Center automation list, read Nov 23, 2026. 77 of 79 live automations mapped; 2 live test automations are left out."
+  },
+
   projects: [
     {
       id: "lead-routing-engine", title: "Lead Routing Engine", top: 1, featured: true,

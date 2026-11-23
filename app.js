@@ -152,19 +152,6 @@
     return c.once ? `${k(c.hours)} hrs saved` : `${k(c.hours)} hrs/yr saved`;
   };
 
-  // ---------- My List (per-viewer) ----------
-  const store = {
-    get() { try { return JSON.parse(localStorage.getItem("devaflix:list") || "[]"); } catch { return []; } },
-    set(v) { try { localStorage.setItem("devaflix:list", JSON.stringify(v)); } catch {} }
-  };
-  let myList = store.get();
-  const inList = id => myList.includes(id);
-  const toggleList = id => {
-    myList = inList(id) ? myList.filter(x => x !== id) : [...myList, id];
-    store.set(myList);
-    document.querySelectorAll(`[data-list="${id}"]`).forEach(b => { b.textContent = inList(id) ? "✓" : "+"; b.setAttribute("aria-label", inList(id) ? "Remove from My List" : "Add to My List"); });
-  };
-
   // ---------- Cards & rows ----------
   const portrait = () => PHONE.matches;
   const card = (p, opts = {}) => {
@@ -235,7 +222,7 @@
     const [kk, v] = id.split(":");
     if (kk === "cat") return (D.categories.find(c => c.id === v) || { name: v }).name;
     if (kk === "unit") return ((D.units.find(u => u.id === v) || { name: v }).name || v).split(" (")[0];
-    return id === "list" ? "My List" : "Home";
+    return id === "funnel" ? "The Funnel" : "Home";
   };
   const trailFor = id => [{ label: "Home", go: "all" }, ...(id === "all" ? [] : [{ label: viewLabel(id), go: id }])];
 
@@ -314,12 +301,11 @@
   const MAIN_NAV = [
     { id: "all", label: "Home" }, { id: "unit:Vendasta", label: "Vendasta", opt: true }, { id: "unit:Broadly", label: "Broadly", opt: true },
     { id: "cat:routing", label: "Lead Routing", opt: true }, { id: "cat:workforce", label: "AI Workforce", opt: true },
-    { ledger: true, label: "Impact" }, { id: "list", label: "My List" }
+    { ledger: true, label: "Impact" }, { id: "funnel", label: "Funnel" }
   ];
   let current = "all";
   const filterBy = id => {
     if (id === "all") return D.projects;
-    if (id === "list") return D.projects.filter(p => inList(p.id));
     const [kk, v] = id.split(":");
     if (kk === "unit") return D.projects.filter(p => (p.unit || "").split(/[ ,/+]+/).includes(v));
     if (kk === "cat") return D.projects.filter(p => p.category === v);
@@ -346,8 +332,51 @@
       ${crumbs(trail)}
       <h1 class="browse__title">${esc(title)}</h1>
       ${desc ? `<p class="browse__desc">${esc(desc)}</p>` : ""}
-      ${rowsHtml || (items.length ? `<div class="grid">${items.map((p, i) => card(p, { i })).join("")}</div>` : `<p class="empty">Nothing here yet. Hover a title and press “+” to save it to My List.</p>`)}
+      ${rowsHtml || (items.length ? `<div class="grid">${items.map((p, i) => card(p, { i })).join("")}</div>` : `<p class="empty">Nothing here yet.</p>`)}
     </section>`;
+
+  // ---------- The Funnel ----------
+  const funnelPage = () => {
+    const F = D.funnel, byId = id => D.projects.find(p => p.id === id);
+    const chips = ai => ai && ai.length ? `<div class="fn__chips">${ai.map(a => `<span class="fn__ai"><i>AI</i>${esc(a)}</span>`).join("")}</div>` : "";
+    const list = xs => `<ul class="fn__list">${xs.map(x => `<li>${esc(x)}</li>`).join("")}</ul>`;
+    const titles = ids => {
+      const ps = (ids || []).map(byId).filter(Boolean);
+      return ps.length ? `<div class="fn__titles">${ps.map(p => `<button data-open="${p.id}">${ICON.play}${esc(p.title)}</button>`).join("")}</div>` : "";
+    };
+    return `<section class="browse fn">
+      ${crumbs(trailFor("funnel"))}
+      <h1 class="browse__title">${esc(F.title)}</h1>
+      <p class="browse__desc">${esc(F.lede)}</p>
+      <div class="fn__stats">${F.stats.map(x => `<div class="${x.hot ? "is-hot" : ""}"><b>${esc(x.v)}</b><span>${esc(x.l)}</span></div>`).join("")}</div>
+
+      <h2 class="fn__h">Acquisition funnel <span>Five stages from first touch to open opportunity. Each automation is counted once, in its main stage.</span></h2>
+      <ol class="fn__funnel">${F.stages.map((st, i) => `<li class="fn__stage" style="--i:${i};--w:${100 - i * 10}%">
+        <div class="fn__barcol"><div class="fn__bar"><div><span class="fn__step">Stage ${i + 1}</span><h3>${esc(st.name)}</h3></div><b class="fn__n">${st.n}<small>live</small></b></div></div>
+        <div class="fn__detail"><p class="fn__what">${esc(st.what)}</p>${list(st.does)}${chips(st.ai)}${titles(st.titles)}</div>
+      </li>`).join("")}</ol>
+
+      <h2 class="fn__h">After the sale <span>Keep partners, then grow them.</span></h2>
+      <div class="fn__pair">${F.after.map(c => `<div class="fn__card"><div class="fn__top"><h3>${esc(c.name)}</h3><b>${c.n}</b></div><p>${esc(c.what)}</p>${list(c.does)}${chips(c.ai)}</div>`).join("")}</div>
+
+      <h2 class="fn__h">Foundation <span>What supports every stage.</span></h2>
+      <div class="fn__found">${F.foundation.map(c => `<div class="fn__fcard"><div class="fn__top"><h3>${esc(c.name)}</h3><b>${c.n}</b></div><p>${esc(c.d)}</p></div>`).join("")}</div>
+
+      <h2 class="fn__h">What the map shows</h2>
+      <div class="fn__ins">${F.takeaways.map(x => `<div><b>${esc(x.t)}</b><p>${esc(x.d)}</p></div>`).join("")}</div>
+      <p class="fn__source">${esc(F.source)}</p>
+    </section>`;
+  };
+  // bars pour in top to bottom, each narrowing like the funnel it draws
+  const playFunnel = () => {
+    if (REDUCED.matches) return;
+    document.querySelectorAll(".fn__bar").forEach((b, i) => b.animate(
+      [{ transform: "scaleX(.2)", opacity: 0 }, { transform: "none", opacity: 1 }],
+      { duration: 520, delay: 120 + i * 70, easing: "cubic-bezier(.23,1,.32,1)", fill: "backwards" }));
+    document.querySelectorAll(".fn__detail").forEach((d, i) => d.animate(
+      [{ transform: "translateY(8px)", opacity: 0 }, { transform: "none", opacity: 1 }],
+      { duration: 420, delay: 260 + i * 70, easing: "cubic-bezier(.23,1,.32,1)", fill: "backwards" }));
+  };
 
   const render = (id = current) => {
     if (id !== current) { const r = $("#rows"); r.classList.remove("is-swapping"); void r.offsetWidth; r.classList.add("is-swapping"); }
@@ -359,7 +388,7 @@
       const hits = D.projects.filter(p => [p.title, p.logline, p.problem, p.how, p.unit, p.role, cat(p).name, ...(p.stack || [])].join(" ").toLowerCase().includes(q)).sort(byWeight);
       $("#hero").hidden = true; clearInterval(heroTimer);
       $("#rows").innerHTML = browsePage("Search", `“${q}”`, `${hits.length} title${hits.length === 1 ? "" : "s"}`, hits, "", [{ label: "Home", go: "all" }, { label: "Search" }])
-        .replace('<p class="empty">Nothing here yet. Hover a title and press “+” to save it to My List.</p>', `<p class="empty">No titles match. Try “routing”, “Claude” or “Apps Script”.</p>`);
+        .replace('<p class="empty">Nothing here yet.</p>', `<p class="empty">No titles match. Try “routing”, “Claude” or “Apps Script”.</p>`);
       afterRender(); return;
     }
     const items = filterBy(id);
@@ -385,7 +414,8 @@
         const c = D.categories.find(x => x.id === v);
         $("#rows").innerHTML = browsePage("Genre", c ? c.name : v, CAT_DESC[v], items.sort(byWeight));
       } else {
-        $("#rows").innerHTML = browsePage("Your picks", "My List", "", items);
+        $("#rows").innerHTML = funnelPage();
+        playFunnel();
       }
     }
     afterRender();
@@ -426,7 +456,6 @@
       <div class="pv__body">
         <div class="pv__btns">
           <button class="cbtn cbtn--play" data-open="${p.id}" aria-label="Open ${esc(p.title)}">${ICON.play}</button>
-          <button class="cbtn" data-list="${p.id}" aria-label="${inList(p.id) ? "Remove from" : "Add to"} My List">${inList(p.id) ? "✓" : "+"}</button>
           <button class="cbtn cbtn--more" data-open="${p.id}" aria-label="More info">${ICON.more}</button>
         </div>
         <div class="pv__meta">${gain ? `<span class="gain">${esc(gain)}</span>` : ""}<span class="pill">${esc(p.unit || "GTM")}</span><span>${esc(p.status)}</span></div>
@@ -493,7 +522,6 @@
         ${crumbs([{ label: "Home", go: "all" }, { label: cat(p).name, go: `cat:${p.category}` }, { label: p.title }])}
         <div class="m-actions">
           <button class="btn btn--play" data-jump="${eps.length ? "eps" : "story"}">${ICON.play}${eps.length ? "Play Episodes" : "Read the Story"}</button>
-          <button class="cbtn" data-list="${p.id}" aria-label="${inList(p.id) ? "Remove from" : "Add to"} My List">${inList(p.id) ? "✓" : "+"}</button>
         </div>
         <div class="m-meta">${gain ? `<span class="gain">${esc(gain)}</span>` : ""}<span>${esc(p.year || "")}</span><span class="pill">${esc(p.unit || "GTM")}</span><span class="pill">${esc(p.status)}</span></div>
         <p class="m-lead" id="mTitle">${esc(p.logline)}</p>
@@ -643,8 +671,6 @@
     if (t.closest("#toTop")) return (!$("#modal").hidden ? $("#modal") : window).scrollTo({ top: 0, behavior: REDUCED.matches ? "instant" : "smooth" });
     if (t.closest("[data-menu]")) { const m = $("#menu"); m.hidden = !m.hidden; t.closest("[data-menu]").setAttribute("aria-expanded", String(!m.hidden)); return; }
     if (!t.closest("#menu")) closeMenu();
-    const list = t.closest("[data-list]");
-    if (list) { e.stopPropagation(); toggleList(list.dataset.list); if (current === "list" && $("#modal").hidden) render(); return; }
     if (t.closest("#soundBtn")) { window.DevaIntro && window.DevaIntro.setSound(!window.DevaIntro.soundOn()); return syncSound(); }
     const pf = t.closest("[data-profile]"); if (pf) return pickProfile(pf.dataset.profile, !pf.classList.contains("gate__skip"));
     const f = t.closest("[data-filter]"); if (f) { e.preventDefault(); closeMenu(); return goView(f.dataset.filter); }
@@ -669,9 +695,9 @@
   // ---------- History ----------
   // Every page, title and still is a history entry, so Back (and swipe-back on phones) steps
   // through the site: title → page → Home → profiles, instead of leaving it.
-  // URLs: #/cat:routing (page), #lead-routing-engine (title), #impact (ledger), #who (profiles).
+  // URLs: #/cat:routing (page), #/funnel (the Funnel), #lead-routing-engine (title), #impact (ledger), #who (profiles).
   history.scrollRestoration = "manual";
-  const VIEWS = ["all", "list", ...D.categories.map(c => `cat:${c.id}`), ...D.units.map(u => `unit:${u.id}`)];
+  const VIEWS = ["all", "funnel", ...D.categories.map(c => `cat:${c.id}`), ...D.units.map(u => `unit:${u.id}`)];
   const urlFor = s => s.gate ? "#who" : s.modal ? `#${s.modal}` : s.view && s.view !== "all" ? `#/${s.view}` : location.pathname + location.search;
   const parse = hash => {
     const h = decodeURIComponent(hash.slice(1));
